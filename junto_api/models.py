@@ -9,6 +9,8 @@ class Category(models.Model):
                                       related_name='subcategories',
                                       related_query_name='subcategory')
 
-
+    class Meta:
+        verbose_name_plural = "categories"
+    
     def __str__(self):
         return self.name
