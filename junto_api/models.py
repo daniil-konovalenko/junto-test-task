@@ -32,3 +32,11 @@ class Dish(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.price} ₽)'
+
+
+class Restaurant(models.Model):
+    name = models.CharField(max_length=200, verbose_name='Название')
+    city = models.CharField(max_length=50, verbose_name='Город')
+    
+    def __str__(self):
+        return self.name
