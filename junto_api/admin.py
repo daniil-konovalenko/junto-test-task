@@ -35,8 +35,19 @@ class OrderAdmin(admin.ModelAdmin):
         DishOrderInline,
     ]
 
+class OrderInline(admin.TabularInline):
+    model = Order
+    verbose_name = "Заказ"
+    verbose_name_plural = "Заказы"
+
+
+class RestaurantAdmin(admin.ModelAdmin):
+    list_display = ['name', 'city']
+    inlines = [
+        OrderInline
+    ]
 
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Dish, DishAdmin)
-admin.site.register(Restaurant)
+admin.site.register(Restaurant, RestaurantAdmin)
 admin.site.register(Order, OrderAdmin)

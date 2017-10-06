@@ -88,7 +88,7 @@ class Order(models.Model):
         return super().save(*args, **kwargs)
     
     def __str__(self):
-        return f'{self.status}: {self.total:.2f}₽'
+        return f'Заказ №{self.id}'
 
 
 class DishOrder(models.Model):
