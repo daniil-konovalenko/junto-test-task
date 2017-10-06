@@ -4,34 +4,56 @@ from django.test import Client
 
 
 class APITestCase(TestCase):
-    @classmethod
-    def setUpModule(cls):
+    def setUp(self):
         user = User.objects.create_user(username='test',
                                         password='SoPasswordMuchStrong',
                                         )
-
-    
-    def setUp(self):
+        user.save()
         self.client = Client()
     
-    def test_api_without_token(self):
-        """Server should respond with 401 Authorization required
-           to any request without API token """
-        
-        response = self.client.get('/api/', secure=True)
+    def test_access_api_without_a_token(self):
+        response = self.client.get('/api/')
         self.assertEqual(response.status_code, 401)
     
-    def test_get_token(self):
-        """Server should respond with an API token
-        to the request with correct credentials"""
+    def test_get_auth_instead_of_post(self):
+        """GET on /api/auth should return Method Not Allowed"""
+        response = self.client.get('/api/auth')
+        self.assertEqual(response.status_code, 405)
+    
+    def test_get_token_and_access_api(self):
+        """
+        Server should respond with an API token
+        to the request with correct credentials"
+        """
         
-        response = self.client.post('/auth',
+        response = self.client.post('/api/auth',
                                     data={'username': 'test',
                                           'password': 'SoPasswordMuchStrong'})
         
-        self.token = response.json().get('token')
-        self.assertIsNotNone(self.token)
-        headers = {'Authorization': f'Bearer {self.token}'}
-        
-        response = self.client.get('/menu', headers=headers)
         self.assertEqual(response.status_code, 200)
+        self.access_token = response.json().get('access_token')
+        self.refresh_token = response.json().get('refresh_token')
+        self.assertIsNotNone(self.access_token)
+        self.assertIsNotNone(self.refresh_token)
+        
+        # Not that we got the access token and the refresh token
+        # we should be able to access api methods
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+        response = self.client.get('/api/', headers=headers)
+        self.assertEqual(response.status_code, 200)
+    
+    def test_get_token_with_incorrect_credentials(self):
+        """
+        If there is no such user in database,
+        api/auth should respond with 403 Forbidden
+        """
+        response = self.client.post('/api/auth',
+                                    data={
+                                        'username': 'test',
+                                        'password': 'so wrong'
+                                    })
+        self.assertEqual(response.status_code, 401)
+    
+    def test_get_token_without_credentials(self):
+        response = self.client.post('/api/auth')
+        self.assertEqual(response.status_code, 401)
