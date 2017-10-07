@@ -1,3 +1,6 @@
+import datetime
+import jwt
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -98,3 +101,36 @@ class DishOrder(models.Model):
     current_price = models.DecimalField(max_digits=8,
                                         decimal_places=2,
                                         verbose_name='Стоимость на момент заказа, ₽')
+
+
+class RefreshToken(models.Model):
+    value = models.CharField(max_length=500)
+    revoked = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
+                             related_name='refresh_tokens',
+                             related_query_name='refresh_token')
+    @classmethod
+    def create_token(cls, user: User,
+                     expires: datetime.datetime,
+                     secret: str) -> 'RefreshToken':
+        payload = {
+            'type': 'refresh',
+            'user_id': user.id,
+            'exp': expires
+        }
+        token_value: str = jwt.encode(payload, secret).decode()
+        token = cls.objects.create(value=token_value, user=user)
+        return token
+    
+    def validate(self):
+        try:
+            payload = jwt.decode(self.value, key=settings.SECRET_KEY)
+            return not self.revoked and payload.get('type') == 'refresh'
+        
+        except jwt.DecodeError:
+            return False
+        except jwt.ExpiredSignatureError:
+            return False
+        
+    def __str__(self):
+        return f'token #{self.id}'
