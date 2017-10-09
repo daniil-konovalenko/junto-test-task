@@ -22,10 +22,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'ukj)m!avguo^07@8s_42rx5vhp4p7w^u#avn^yg7#mf=2ic9di'
 
+# Access token's expiration time in seconds
+ACCESS_TOKEN_EXPIRATION_TIME = 24 * 60 * 60
+
+# Refresh token's expiration time in seconds
+REFRESH_TOKEN_EXPIRATION_TIME = 7 * 24 * 60 * 60
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['testserver', 'localhost']
 
 
 # Application definition
