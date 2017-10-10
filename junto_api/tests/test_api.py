@@ -1,6 +1,8 @@
 from django.test import TestCase
 from junto_api.models import User
 from django.test import Client
+from django.test.utils import override_settings
+import time
 
 
 class APITestCase(TestCase):
@@ -57,3 +59,29 @@ class APITestCase(TestCase):
     def test_get_token_without_credentials(self):
         response = self.client.post('/api/auth')
         self.assertEqual(response.status_code, 401)
+
+    @override_settings(ACCESS_TOKEN_EXPIRATION_TIME=2)
+    def test_expired_token(self):
+        response = self.client.post('/api/auth',
+                                    data={'username': 'test',
+                                          'password': 'SoPasswordMuchStrong'})
+        
+        self.assertEqual(response.status_code, 200)
+        access_token = response.json().get('access', {}).get('token')
+        # Wait for token to expire
+        time.sleep(3)
+        # Try to access a protected endpoint
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {access_token}'}
+        response = self.client.get('/api/menu', **headers)
+        self.assertEqual(response.status_code, 403)
+        
+        error = response.json().get('error')
+        self.assertIsNotNone(error)
+        self.assertIn('expired', error)
+        
+    def access_api_with_incorrect_token(self):
+        headers = {'HTTP_AUTHORIZATION': 'Bearer obviously wrong token'}
+        response = self.client.get('/api/menu', **headers)
+        self.assertEqual(response.status_code, 401)
+        error = response.json().get('error')
+        self.assertIn('invalid token', error.lower())
