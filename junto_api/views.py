@@ -9,6 +9,11 @@ from typing import Union
 from .auth import token_required, generate_access_token
 
 
+@token_required
+def menu(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:
+    return JsonResponse({'status': 'ok'})
+
+
 @csrf_exempt
 @require_POST
 def get_token(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:
