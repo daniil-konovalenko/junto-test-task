@@ -12,7 +12,7 @@ class APITestCase(TestCase):
         self.client = Client()
     
     def test_access_api_without_a_token(self):
-        response = self.client.get('/api/')
+        response = self.client.get('/api/menu')
         self.assertEqual(response.status_code, 401)
     
     def test_get_auth_instead_of_post(self):
@@ -31,15 +31,15 @@ class APITestCase(TestCase):
                                           'password': 'SoPasswordMuchStrong'})
         
         self.assertEqual(response.status_code, 200)
-        self.access_token = response.json().get('access_token')
-        self.refresh_token = response.json().get('refresh_token')
+        self.access_token = response.json().get('access', {}).get('token')
+        self.refresh_token = response.json().get('refresh', {}).get('token')
         self.assertIsNotNone(self.access_token)
         self.assertIsNotNone(self.refresh_token)
         
         # Not that we got the access token and the refresh token
         # we should be able to access api methods
-        headers = {'Authorization': f'Bearer {self.access_token}'}
-        response = self.client.get('/api/', headers=headers)
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}'}
+        response = self.client.get('/api/menu', **headers)
         self.assertEqual(response.status_code, 200)
     
     def test_get_token_with_incorrect_credentials(self):
