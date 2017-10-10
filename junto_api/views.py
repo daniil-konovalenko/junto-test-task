@@ -1,12 +1,13 @@
+import jwt
 from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.conf import settings
 from .models import RefreshToken
-from datetime import datetime, timedelta
 from typing import Union
-from .auth import token_required, generate_access_token
+from .auth import token_required, generate_tokens
 
 
 @token_required
@@ -22,31 +23,62 @@ def get_token(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:
     user = authenticate(username=username, password=password)
     
     if user is not None:
-        now = datetime.utcnow()
-        
-        access_token_expires = now + timedelta(seconds=settings.ACCESS_TOKEN_EXPIRATION_TIME)
-        
-        access_token = generate_access_token(user,
-                                             access_token_expires,
-                                             secret=settings.SECRET_KEY)
-        
-        refresh_token_expires = now + timedelta(seconds=settings.REFRESH_TOKEN_EXPIRATION_TIME)
-        
-        refresh_token = RefreshToken.create_token(user, refresh_token_expires,
-                                                  settings.SECRET_KEY)
-        refresh_token.save()
-        
-        return JsonResponse({
-            'access': {
-                'token': access_token,
-                'expires_in': settings.ACCESS_TOKEN_EXPIRATION_TIME
-            },
-            'refresh': {
-                'token': refresh_token.value,
-                'expires_in': settings.REFRESH_TOKEN_EXPIRATION_TIME
-            }
-        })
+        tokens = generate_tokens(user)
+        return JsonResponse(tokens)
     
     else:
         return HttpResponse('Unauthorized', status=401)
 
+
+@csrf_exempt
+@require_POST
+def refresh(request: HttpRequest) -> JsonResponse:
+    token = request.POST.get('token')
+    
+    if token is not None:
+        try:
+            payload = jwt.decode(token, key=settings.SECRET_KEY)
+            if payload.get('type') != 'refresh':
+                raise ValueError('Incorrect token type')
+            user_id = payload.get('user_id')
+            user = User.objects.get(id=user_id)
+            token_object = (RefreshToken.objects.all()
+                                                .filter(value=token)
+                                                .first())
+            
+            if token_object in user.refresh_tokens.all() and not token_object.revoked:
+                # Revoke all previous refresh tokens
+                for token in user.refresh_tokens.all():
+                    token.revoked = True
+                    token.save()
+                tokens = generate_tokens(user)
+                return JsonResponse(tokens)
+            else:
+                return JsonResponse({'error': 'Refresh token is revoked '
+                                              'or invalid. Please obtain'
+                                              'a new pair of tokens via '
+                                              'username/password authentication'},
+                                    status=403)
+        
+        except jwt.ExpiredSignatureError:
+            return JsonResponse({'error': 'Refresh token expired. '
+                                          'Please obtain a new pair of tokens '
+                                          'via username/password authentication'},
+                                status=403)
+        except (jwt.DecodeError, RefreshToken.DoesNotExist):
+            return JsonResponse({'error': 'Invalid refresh token.'
+                                          'Please obtain a new pair of tokens '
+                                          'via username/password authentication'},
+                                status=401)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid token type. '
+                                          'Please make sure that you are '
+                                          'sending the refresh token'},
+                                status=401)
+        
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User corresponding to the token '
+                                          'does not exist. Please contact '
+                                          'the administrator to resolve '
+                                          'this issue'},
+                                status=401)
