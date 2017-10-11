@@ -27,7 +27,10 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 class DishAdmin(admin.ModelAdmin):
-    list_display = ['name', 'price']
+    def get_categories(self, obj):
+        return ', '.join(cat.name for cat in obj.categories.all())
+    get_categories.short_description = 'Категории'
+    list_display = ['name', 'get_categories', 'price']
 
 
 class OrderAdmin(admin.ModelAdmin):
