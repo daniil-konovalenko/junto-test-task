@@ -5,14 +5,15 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from .models import RefreshToken
+from .models import RefreshToken, Order, Restaurant, Dish, DishOrder
 from typing import Union
 from .auth import token_required, generate_tokens
 from .models import Category
+import json
 
 
 @token_required
-def menu(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:
+def menu(request: HttpRequest) -> JsonResponse:
     top_level_categories = Category.objects.filter(supercategory=None)
     
     return JsonResponse({
@@ -23,6 +24,51 @@ def menu(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:
     })
 
 
+@token_required
+@csrf_exempt
+@require_POST
+def new_order(request: HttpRequest) -> JsonResponse:
+    try:
+        order_data = json.loads(request.body.decode())
+        
+        dish_ids = order_data.get('dish_ids')
+        if not isinstance(dish_ids, list):
+            return JsonResponse({'error': 'dish_ids should be a list'},
+                                status=400)
+        
+        restaurant_id = order_data.get('restaurant_id')
+        try:
+            restaurant = Restaurant.objects.get(pk=restaurant_id)
+        except Restaurant.DoesNotExist:
+            return JsonResponse({'error': f'Restaurant with id {restaurant_id}'
+                                          'does not exist'},
+                                status=400)
+        
+        order = Order.objects.create(restaurant=restaurant,
+                                     operator=request.user)
+        order.save()
+        
+        failed = []
+        
+        for dish_id in dish_ids:
+            try:
+                dish = Dish.objects.get(pk=int(dish_id))
+                relation = DishOrder.objects.create(dish=dish,
+                                                    order=order,
+                                                    current_price=dish.price)
+                relation.save()
+            except (Dish.DoesNotExist, ValueError):
+                failed.append(dish_id)
+        
+        return JsonResponse({
+            'order_id': order.id,
+            'failed_dishes_ids': failed
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid data format'},
+                            status=400)
+    
 @csrf_exempt
 @require_POST
 def get_token(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:

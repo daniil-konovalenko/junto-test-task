@@ -1,16 +1,21 @@
 from django.test import TestCase
-from junto_api.models import User, Category, Dish
+from junto_api.models import User, Category, Dish, Restaurant, Order
 from django.test import Client
 from django.test.utils import override_settings
 import time
+import json
 
 
-class APITestCase(TestCase):
-    def setUp(self):
+class APIAuthTestCase(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        
         user = User.objects.create_user(username='test',
-                                        password='SoPasswordMuchStrong',
-                                        )
+                                        password='SoPasswordMuchStrong')
         user.save()
+    
+    def setUp(self):
         self.client = Client()
     
     def test_access_api_without_a_token(self):
@@ -100,9 +105,18 @@ class APITestCase(TestCase):
         response = self.client.post('/api/auth/refresh',
                                     data={'token': refresh_token})
         self.assertEqual(response.status_code, 403)
-    
-    def test_menu(self):
-        # Prepare some food to fill the menu
+
+
+class APIMethodsTestCase(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        
+        user = User.objects.create_user(username='test',
+                                        password='SoPasswordMuchStrong')
+        user.save()
+        
+        # Prepare some food
         food = Category.objects.create(name='Еда')
         sauces = Category.objects.create(name='Соусы')
         burgers = Category.objects.create(name='Бургеры')
@@ -124,11 +138,20 @@ class APITestCase(TestCase):
         fries.save()
         schezwan_sauce.save()
         
+        # Build a restaurant
+        Restaurant.objects.create(name='Тестовый ресторан')
+    
+    def setUp(self):
+        self.client = Client()
+        # Obtain a token
         response = self.client.post('/api/auth',
                                     data={'username': 'test',
                                           'password': 'SoPasswordMuchStrong'})
         
         self.access_token = response.json().get('access', {}).get('token')
+        
+    def test_menu(self):
+        
         headers = {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}'}
         response = self.client.get('/api/menu', **headers)
         
@@ -193,3 +216,32 @@ class APITestCase(TestCase):
         }
         
         self.assertDictEqual(expected_json, response.json())
+    
+    def test_create_order(self):
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}',
+                   'content_type': 'application/json'}
+        payload = {'restaurant_id': 1,
+                   'dish_ids': [1, 2, 1, 3]}
+        response = self.client.post('/api/order',
+                                    data=json.dumps(payload),
+                                    **headers)
+        self.assertEqual(response.status_code, 200)
+        order_id = response.json()['order_id']
+        
+        order = Order.objects.get(pk=order_id)
+        expected_dish_ids = payload['dish_ids']
+        result_dish_ids = [dish.id for dish in order.dishes.all()]
+        self.assertCountEqual(expected_dish_ids, result_dish_ids)
+    
+    def test_create_order_with_incorrect_dish_id(self):
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}',
+                   'content_type': 'application/json'}
+        
+        payload = {'restaurant_id': 1,
+                   'dish_ids': ['not id']}
+        response = self.client.post('/api/order',
+                                    data=json.dumps(payload),
+                                    **headers)
+        self.assertEqual(response.status_code, 200)
+        order_id = response.json()['order_id']
+        self.assertIn('not id', response.json()['failed_dishes_ids'])
