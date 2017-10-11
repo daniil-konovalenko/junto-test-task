@@ -1,5 +1,5 @@
 from django.test import TestCase
-from junto_api.models import User
+from junto_api.models import User, Category, Dish
 from django.test import Client
 from django.test.utils import override_settings
 import time
@@ -74,7 +74,7 @@ class APITestCase(TestCase):
         headers = {'HTTP_AUTHORIZATION': f'Bearer {access_token}'}
         response = self.client.get('/api/menu', **headers)
         self.assertEqual(response.status_code, 403)
-        
+    
     def test_access_api_with_incorrect_token(self):
         headers = {'HTTP_AUTHORIZATION': 'Bearer obviously wrong token'}
         response = self.client.get('/api/menu', **headers)
@@ -100,3 +100,91 @@ class APITestCase(TestCase):
         response = self.client.post('/api/auth/refresh',
                                     data={'token': refresh_token})
         self.assertEqual(response.status_code, 403)
+    
+    def test_menu(self):
+        # Prepare some food to fill the menu
+        food = Category.objects.create(name='Еда')
+        sauces = Category.objects.create(name='Соусы')
+        burgers = Category.objects.create(name='Бургеры')
+        
+        cheeseburger = Dish.objects.create(name='Чизбургер', price='50.00')
+        fries = Dish.objects.create(name='Картофель фри', price='49.99')
+        schezwan_sauce = Dish.objects.create(name='Сычуанский соус',
+                                             price='100500')
+        
+        food.subcategories.add(burgers)
+        food.dishes.add(fries)
+        burgers.dishes.add(cheeseburger)
+        sauces.dishes.add(schezwan_sauce)
+        
+        food.save()
+        sauces.save()
+        burgers.save()
+        cheeseburger.save()
+        fries.save()
+        schezwan_sauce.save()
+        
+        response = self.client.post('/api/auth',
+                                    data={'username': 'test',
+                                          'password': 'SoPasswordMuchStrong'})
+        
+        self.access_token = response.json().get('access', {}).get('token')
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}'}
+        response = self.client.get('/api/menu', **headers)
+        
+        self.assertEqual(response.status_code, 200)
+        
+        expected_json = {
+            'categories': {
+                'count': 2,
+                'items': [
+                    {
+                        'name': 'Еда',
+                        'subcategories': {
+                            'count': 1,
+                            'items': [
+                                {
+                                    'name': 'Бургеры',
+                                    'dishes': {
+                                        'count': 1,
+                                        'items': [
+                                            {'name': 'Чизбургер',
+                                             'price': '50.00'}
+                                        ]
+                                    },
+                                    'subcategories': {
+                                        'count': 0,
+                                        'items': []
+                                    }
+                                }
+                            ]},
+                        'dishes': {
+                            'count': 1,
+                            'items': [
+                                {
+                                    'name': 'Картофель фри',
+                                    'price': '49.99',
+                                }
+                            ]}
+                    },
+                    {
+                        'name': 'Соусы',
+                        'subcategories': {
+                            'count': 0,
+                            'items': []
+                        },
+                        'dishes': {
+                            'count': 1,
+                            'items': [
+                                {
+                                'name': 'Сычуанский соус',
+                                'price': '100500.00'
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+        
+        self.assertDictEqual(expected_json, response.json())

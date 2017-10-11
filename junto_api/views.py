@@ -8,11 +8,19 @@ from django.conf import settings
 from .models import RefreshToken
 from typing import Union
 from .auth import token_required, generate_tokens
+from .models import Category
 
 
 @token_required
 def menu(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:
-    return JsonResponse({'status': 'ok'})
+    top_level_categories = Category.objects.filter(supercategory=None)
+    
+    return JsonResponse({
+        'categories': {
+            'count': len(top_level_categories),
+            'items': [cat.serialize() for cat in top_level_categories]
+        }
+    })
 
 
 @csrf_exempt

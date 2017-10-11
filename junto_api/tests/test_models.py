@@ -14,6 +14,10 @@ class CategoryTestCase(TestCase):
         
         self.fastfood.subcategories.add(self.burgers)
         self.burgers.subcategories.add(self.beef_burgers)
+    
+    def tearDown(self):
+        Category.objects.all().delete()
+        Dish.objects.all().delete()
         
     def test_subcategories(self):
         self.assertTrue(self.burgers in self.fastfood.subcategories.all())

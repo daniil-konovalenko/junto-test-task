@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from decimal import Decimal
 
+
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название')
     supercategory = models.ForeignKey('self',
@@ -14,6 +15,19 @@ class Category(models.Model):
                                       blank=True,
                                       related_name='subcategories',
                                       related_query_name='subcategory')
+    
+    def serialize(self):
+        return {
+            'name': self.name,
+            'dishes': {
+                'count': self.dishes.count(),
+                'items': [dish.serialize() for dish in self.dishes.all()]
+            },
+            'subcategories': {
+                'count': self.subcategories.count(),
+                'items': [cat.serialize() for cat in self.subcategories.all()]
+            }
+        }
 
     class Meta:
         verbose_name_plural = 'categories'
@@ -31,6 +45,12 @@ class Dish(models.Model):
                                         related_name='dishes',
                                         related_query_name='dish',
                                         verbose_name='Категории')
+    
+    def serialize(self):
+        return {
+            'name': self.name,
+            'price': str(self.price)
+        }
     
     class Meta:
         verbose_name_plural = 'Dishes'
