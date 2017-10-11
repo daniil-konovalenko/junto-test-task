@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Category, Dish, Restaurant, Order, DishOrder
+from django.utils.html import linebreaks
 
 
 class CategoryInline(admin.TabularInline):
@@ -49,7 +50,15 @@ make_cancelled.short_description = "Отметить выделенные зак
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['created_at', 'restaurant', 'operator', 'status', 'total']
+    def get_dishes(self, obj):
+        return ''.join(linebreaks(dish, autoescape=True) for dish in obj.dishes.all())
+    
+    get_dishes.short_description = 'cостав заказа'
+    get_dishes.allow_tags = True
+    
+    list_display = ['created_at', 'restaurant', 'operator', 'get_dishes',
+                    'status', 'total']
+    
     inlines = [
         DishOrderInline,
     ]
