@@ -52,7 +52,12 @@ make_cancelled.short_description = "Отметить выделенные зак
 
 class OrderAdmin(admin.ModelAdmin):
     def get_dishes(self, obj):
-        return ''.join(linebreaks(dish, autoescape=True) for dish in obj.dishes.all())
+        dishes = []
+        for dish in obj.dishes.all():
+            price = dish.dishorder_set.get(order=obj).current_price
+            dishes.append(f'{dish.name} ({price:.2f}₽)')
+        
+        return ''.join(linebreaks(dish) for dish in dishes)
     
     get_dishes.short_description = 'cостав заказа'
     get_dishes.allow_tags = True
