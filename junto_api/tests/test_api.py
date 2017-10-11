@@ -148,8 +148,11 @@ class APITestCase(TestCase):
                                     'dishes': {
                                         'count': 1,
                                         'items': [
-                                            {'name': 'Чизбургер',
-                                             'price': '50.00'}
+                                            {
+                                                'id': 1,
+                                                'name': 'Чизбургер',
+                                                'price': '50.00'
+                                            }
                                         ]
                                     },
                                     'subcategories': {
@@ -162,6 +165,7 @@ class APITestCase(TestCase):
                             'count': 1,
                             'items': [
                                 {
+                                    'id': 2,
                                     'name': 'Картофель фри',
                                     'price': '49.99',
                                 }
@@ -177,8 +181,9 @@ class APITestCase(TestCase):
                             'count': 1,
                             'items': [
                                 {
-                                'name': 'Сычуанский соус',
-                                'price': '100500.00'
+                                    'id': 3,
+                                    'name': 'Сычуанский соус',
+                                    'price': '100500.00'
                                 }
                             ]
                         }

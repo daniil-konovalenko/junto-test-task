@@ -48,6 +48,7 @@ class Dish(models.Model):
     
     def serialize(self):
         return {
+            'id': self.id,
             'name': self.name,
             'price': str(self.price)
         }
