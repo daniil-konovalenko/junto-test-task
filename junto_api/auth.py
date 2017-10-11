@@ -43,7 +43,7 @@ def token_required(function):
             
             return function(request, *args, **kwargs)
         else:
-            return HttpResponse({'error': 'No token provided'},
+            return JsonResponse({'error': 'No token provided'},
                                 status=401)
     
     return wrap
