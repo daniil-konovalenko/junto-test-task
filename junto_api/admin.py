@@ -10,8 +10,8 @@ class CategoryInline(admin.TabularInline):
 
 class DishInline(admin.TabularInline):
     model = Category.dishes.through
-    verbose_name = 'плюдо'
-    verbose_name_plural = 'плюда'
+    verbose_name = 'блюдо'
+    verbose_name_plural = 'блюда'
 
 
 class DishOrderInline(DishInline):
