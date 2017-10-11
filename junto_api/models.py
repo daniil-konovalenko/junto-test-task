@@ -139,7 +139,7 @@ class DishOrder(models.Model):
 
 
 class RefreshToken(models.Model):
-    value = models.CharField(max_length=500)
+    value = models.CharField(max_length=500, db_index=True)
     revoked = models.BooleanField(default=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name='refresh_tokens',
