@@ -75,16 +75,10 @@ class APITestCase(TestCase):
         response = self.client.get('/api/menu', **headers)
         self.assertEqual(response.status_code, 403)
         
-        error = response.json().get('error')
-        self.assertIsNotNone(error)
-        self.assertIn('expired', error)
-    
     def test_access_api_with_incorrect_token(self):
         headers = {'HTTP_AUTHORIZATION': 'Bearer obviously wrong token'}
         response = self.client.get('/api/menu', **headers)
-        self.assertEqual(response.status_code, 401)
-        error = response.json().get('error')
-        self.assertIn('invalid token', error.lower())
+        self.assertEqual(response.status_code, 403)
     
     def test_refresh_token(self):
         response = self.client.post('/api/auth',

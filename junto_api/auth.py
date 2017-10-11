@@ -1,10 +1,14 @@
+from typing import Optional
 from django.conf import settings
 from django.contrib.auth.models import User
 import jwt
 from datetime import datetime, timedelta
+
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest
-from django.http import HttpResponse
 from django.http import JsonResponse
+from django.contrib.auth import authenticate
+
 from junto_api.models import RefreshToken
 
 
@@ -30,18 +34,12 @@ def token_required(function):
             # Assuming that header looks like this: 'Bearer token'
             _, token, *_ = auth_header.split()
             
-            try:
-                payload = jwt.decode(token, key=settings.SECRET_KEY)
-            except jwt.ExpiredSignatureError:
-                return JsonResponse({'error': 'Signature expired. '
-                                              'Renew your token '
-                                              'using your '
-                                              'refresh token'},
-                                    status=403)
-            except jwt.DecodeError:
-                return JsonResponse({'error': 'Invalid token'}, status=401)
-            
-            return function(request, *args, **kwargs)
+            user = authenticate(request, token=token)
+            if user is not None:
+                request.user = user
+                return function(request, *args, **kwargs)
+            else:
+                raise PermissionDenied()
         else:
             return JsonResponse({'error': 'No token provided'},
                                 status=401)
@@ -76,3 +74,21 @@ def generate_tokens(user: User):
             'expires_in': settings.REFRESH_TOKEN_EXPIRATION_TIME
         }
     }
+
+
+class AccessTokenAuthBackend(object):
+    def authenticate(self, request, token: str = None) -> Optional[User]:
+        try:
+            payload = jwt.decode(token, key=settings.SECRET_KEY)
+            user_id = payload.get('user_id')
+            return self.get_user(user_id)
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.DecodeError:
+            return None
+
+    def get_user(self, user_id):
+        try:
+            return User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return None
