@@ -8,7 +8,7 @@ from decimal import Decimal
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Название')
+    name = models.CharField(max_length=100, verbose_name='название')
     supercategory = models.ForeignKey('self',
                                       on_delete=models.SET_NULL,
                                       null=True,
@@ -30,22 +30,22 @@ class Category(models.Model):
         }
 
     class Meta:
-        verbose_name = 'Категория'
-        verbose_name_plural = 'Категории'
+        verbose_name = 'категория'
+        verbose_name_plural = 'категории'
     
     def __str__(self):
         return self.name
 
 
 class Dish(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Название')
+    name = models.CharField(max_length=200, verbose_name='название')
     price = models.DecimalField(max_digits=8,
                                 decimal_places=2,
-                                verbose_name='Стоимость, ₽')
+                                verbose_name='стоимость, ₽')
     categories = models.ManyToManyField(Category,
                                         related_name='dishes',
                                         related_query_name='dish',
-                                        verbose_name='Категории')
+                                        verbose_name='категории')
     
     def serialize(self):
         return {
@@ -55,20 +55,20 @@ class Dish(models.Model):
         }
     
     class Meta:
-        verbose_name = 'Блюдо'
-        verbose_name_plural = 'Блюда'
+        verbose_name = 'блюдо'
+        verbose_name_plural = 'блюда'
 
     def __str__(self):
         return f'{self.name} ({self.price} ₽)'
 
 
 class Restaurant(models.Model):
-    name = models.CharField(max_length=200, verbose_name='Название')
-    city = models.CharField(max_length=50, verbose_name='Город')
+    name = models.CharField(max_length=200, verbose_name='название')
+    city = models.CharField(max_length=50, verbose_name='город')
     
     class Meta:
-        verbose_name = 'Ресторан'
-        verbose_name_plural = 'Рестораны'
+        verbose_name = 'ресторан'
+        verbose_name_plural = 'рестораны'
     
     def __str__(self):
         return self.name
@@ -79,7 +79,7 @@ class Order(models.Model):
                                  on_delete=models.CASCADE,
                                  related_name='orders',
                                  related_query_name='order',
-                                 verbose_name='Оператор')
+                                 verbose_name='оператор')
     
     PENDING = 0
     PAID = 1
@@ -91,24 +91,24 @@ class Order(models.Model):
     )
     status = models.SmallIntegerField(choices=STATUS_CHOICES,
                                       default=PENDING,
-                                      verbose_name='Статус')
+                                      verbose_name='статус')
     
     restaurant = models.ForeignKey(Restaurant,
                                    on_delete=models.CASCADE,
                                    related_name='order',
                                    related_query_name='orders',
-                                   verbose_name='Ресторан')
+                                   verbose_name='ресторан')
     
     dishes = models.ManyToManyField(Dish, through='DishOrder')
     
     created_at = models.DateTimeField(editable=False,
-                                      verbose_name='Время создания')
+                                      verbose_name='время создания')
     updated_at = models.DateTimeField()
     
     @property
     def total(self) -> Decimal:
         return sum([rel.current_price for rel in self.dishorder_set.all()])
-    total.fget.short_description = 'Сумма, ₽'
+    total.fget.short_description = 'сумма, ₽'
     
     def save(self, *args, **kwargs):
         """Update timestamps on save"""
@@ -119,8 +119,8 @@ class Order(models.Model):
         return super().save(*args, **kwargs)
     
     class Meta:
-        verbose_name = 'Заказ'
-        verbose_name_plural = 'Заказы'
+        verbose_name = 'заказ'
+        verbose_name_plural = 'заказы'
     
     def __str__(self):
         return f'Заказ №{self.id}'
@@ -132,7 +132,7 @@ class DishOrder(models.Model):
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
     current_price = models.DecimalField(max_digits=8,
                                         decimal_places=2,
-                                        verbose_name='Стоимость на момент заказа, ₽')
+                                        verbose_name='стоимость на момент заказа, ₽')
 
 
 class RefreshToken(models.Model):

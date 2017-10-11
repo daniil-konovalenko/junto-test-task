@@ -4,14 +4,14 @@ from .models import Category, Dish, Restaurant, Order, DishOrder
 
 class CategoryInline(admin.TabularInline):
     model = Category
-    verbose_name = 'Подкатегория'
-    verbose_name_plural = 'Подкатегории'
+    verbose_name = 'подкатегория'
+    verbose_name_plural = 'подкатегории'
 
 
 class DishInline(admin.TabularInline):
     model = Category.dishes.through
-    verbose_name = 'Блюдо'
-    verbose_name_plural = 'Блюда'
+    verbose_name = 'плюдо'
+    verbose_name_plural = 'плюда'
 
 
 class DishOrderInline(DishInline):
@@ -30,7 +30,7 @@ class DishAdmin(admin.ModelAdmin):
     def get_categories(self, obj):
         return ', '.join(cat.name for cat in obj.categories.all())
     
-    get_categories.short_description = 'Категории'
+    get_categories.short_description = 'категории'
     list_display = ['name', 'get_categories', 'price']
 
 
@@ -58,8 +58,8 @@ class OrderAdmin(admin.ModelAdmin):
 
 class OrderInline(admin.TabularInline):
     model = Order
-    verbose_name = "Заказ"
-    verbose_name_plural = "Заказы"
+    verbose_name = "заказ"
+    verbose_name_plural = "заказы"
 
 
 class RestaurantAdmin(admin.ModelAdmin):
