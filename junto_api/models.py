@@ -77,12 +77,10 @@ class Order(models.Model):
     PENDING = 0
     PAID = 1
     CANCELLED = 2
-    DONE = 3
     STATUS_CHOICES = (
-        (PENDING, 'Pending'),
-        (PAID, 'Paid'),
-        (CANCELLED, 'Cancelled'),
-        (DONE, 'Done')
+        (PENDING, 'Ожидает оплаты'),
+        (PAID, 'Оплачен'),
+        (CANCELLED, 'Отменён'),
     )
     status = models.SmallIntegerField(choices=STATUS_CHOICES,
                                       default=PENDING,

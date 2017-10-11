@@ -29,8 +29,23 @@ class CategoryAdmin(admin.ModelAdmin):
 class DishAdmin(admin.ModelAdmin):
     def get_categories(self, obj):
         return ', '.join(cat.name for cat in obj.categories.all())
+    
     get_categories.short_description = 'Категории'
     list_display = ['name', 'get_categories', 'price']
+
+
+def make_paid(modeladmin, request, queryset):
+    queryset.update(status=Order.PAID)
+
+
+make_paid.short_description = "Отметить выделенные заказы как оплаченные"
+
+
+def make_cancelled(modeladmin, request, queryset):
+    queryset.update(status=Order.CANCELLED)
+
+
+make_cancelled.short_description = "Отметить выделенные заказы как отменённые"
 
 
 class OrderAdmin(admin.ModelAdmin):
@@ -38,6 +53,8 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [
         DishOrderInline,
     ]
+    actions = [make_paid, make_cancelled]
+
 
 class OrderInline(admin.TabularInline):
     model = Order
@@ -50,6 +67,7 @@ class RestaurantAdmin(admin.ModelAdmin):
     inlines = [
         OrderInline
     ]
+
 
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Dish, DishAdmin)
