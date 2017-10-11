@@ -78,7 +78,8 @@ class Order(models.Model):
     operator = models.ForeignKey(User,
                                  on_delete=models.CASCADE,
                                  related_name='orders',
-                                 related_query_name='order')
+                                 related_query_name='order',
+                                 verbose_name='Оператор')
     
     PENDING = 0
     PAID = 1
@@ -95,16 +96,19 @@ class Order(models.Model):
     restaurant = models.ForeignKey(Restaurant,
                                    on_delete=models.CASCADE,
                                    related_name='order',
-                                   related_query_name='orders')
+                                   related_query_name='orders',
+                                   verbose_name='Ресторан')
     
     dishes = models.ManyToManyField(Dish, through='DishOrder')
     
-    created_at = models.DateTimeField(editable=False)
+    created_at = models.DateTimeField(editable=False,
+                                      verbose_name='Время создания')
     updated_at = models.DateTimeField()
     
     @property
     def total(self) -> Decimal:
         return sum([rel.current_price for rel in self.dishorder_set.all()])
+    total.fget.short_description = 'Сумма, ₽'
     
     def save(self, *args, **kwargs):
         """Update timestamps on save"""

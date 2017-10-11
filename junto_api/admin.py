@@ -64,9 +64,6 @@ class OrderInline(admin.TabularInline):
 
 class RestaurantAdmin(admin.ModelAdmin):
     list_display = ['name', 'city']
-    inlines = [
-        OrderInline
-    ]
 
 
 admin.site.register(Category, CategoryAdmin)
