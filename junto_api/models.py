@@ -30,7 +30,7 @@ class Category(models.Model):
         }
 
     class Meta:
-        verbose_name_plural = 'categories'
+        verbose_name_plural = 'Категории'
     
     def __str__(self):
         return self.name
@@ -54,7 +54,7 @@ class Dish(models.Model):
         }
     
     class Meta:
-        verbose_name_plural = 'Dishes'
+        verbose_name_plural = 'Блюда'
 
     def __str__(self):
         return f'{self.name} ({self.price} ₽)'
@@ -72,8 +72,7 @@ class Order(models.Model):
     operator = models.ForeignKey(User,
                                  on_delete=models.CASCADE,
                                  related_name='orders',
-                                 related_query_name='order',
-                                 limit_choices_to={'is_staff': True})
+                                 related_query_name='order')
     
     PENDING = 0
     PAID = 1

@@ -4,14 +4,14 @@ from .models import Category, Dish, Restaurant, Order, DishOrder
 
 class CategoryInline(admin.TabularInline):
     model = Category
-    verbose_name = 'Subcategory'
-    verbose_name_plural = 'Subcategories'
+    verbose_name = 'Подкатегория'
+    verbose_name_plural = 'Подкатегории'
 
 
 class DishInline(admin.TabularInline):
     model = Category.dishes.through
-    verbose_name = 'Dish'
-    verbose_name_plural = 'Dishes'
+    verbose_name = 'Блюдо'
+    verbose_name_plural = 'Блюда'
 
 
 class DishOrderInline(DishInline):
@@ -22,6 +22,7 @@ class DishOrderInline(DishInline):
 class CategoryAdmin(admin.ModelAdmin):
     inlines = [
         CategoryInline,
+        DishInline
     ]
 
 
