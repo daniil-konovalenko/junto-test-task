@@ -30,6 +30,7 @@ class Category(models.Model):
         }
 
     class Meta:
+        verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
     
     def __str__(self):
@@ -54,6 +55,7 @@ class Dish(models.Model):
         }
     
     class Meta:
+        verbose_name = 'Блюдо'
         verbose_name_plural = 'Блюда'
 
     def __str__(self):
@@ -63,6 +65,10 @@ class Dish(models.Model):
 class Restaurant(models.Model):
     name = models.CharField(max_length=200, verbose_name='Название')
     city = models.CharField(max_length=50, verbose_name='Город')
+    
+    class Meta:
+        verbose_name = 'Ресторан'
+        verbose_name_plural = 'Рестораны'
     
     def __str__(self):
         return self.name
@@ -107,6 +113,10 @@ class Order(models.Model):
         self.updated_at = timezone.now()
         
         return super().save(*args, **kwargs)
+    
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
     
     def __str__(self):
         return f'Заказ №{self.id}'
