@@ -18,6 +18,7 @@ class DishInline(admin.TabularInline):
 class DishOrderInline(DishInline):
     model = DishOrder
     extra = 1
+    readonly_fields = ('current_price', 'dish')
 
 
 class CategoryAdmin(admin.ModelAdmin):

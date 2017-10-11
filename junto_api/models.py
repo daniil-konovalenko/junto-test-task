@@ -133,6 +133,9 @@ class DishOrder(models.Model):
     current_price = models.DecimalField(max_digits=8,
                                         decimal_places=2,
                                         verbose_name='стоимость на момент заказа, ₽')
+    
+    def __str__(self):
+        return str(self.dish)
 
 
 class RefreshToken(models.Model):
