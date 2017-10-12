@@ -25,6 +25,16 @@ def menu(request: HttpRequest) -> JsonResponse:
 
 
 @token_required
+def restaurants(request: HttpRequest) -> JsonResponse:
+    restaurants = Restaurant.objects.all()
+    return JsonResponse({
+        'restaurants': {
+            'count': len(restaurants),
+            'items': [restaurant.serialize() for restaurant in restaurants]
+        }
+    })
+
+@token_required
 @csrf_exempt
 @require_POST
 def new_order(request: HttpRequest) -> JsonResponse:

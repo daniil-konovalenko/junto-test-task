@@ -139,7 +139,7 @@ class APIMethodsTestCase(TestCase):
         schezwan_sauce.save()
         
         # Build a restaurant
-        Restaurant.objects.create(name='Тестовый ресторан')
+        Restaurant.objects.create(name='Тестовый ресторан', city='Москва')
     
     def setUp(self):
         self.client = Client()
@@ -216,6 +216,27 @@ class APIMethodsTestCase(TestCase):
         }
         
         self.assertDictEqual(expected_json, response.json())
+        
+    def test_restaurants(self):
+        
+        
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}'}
+        response = self.client.get('/api/restaurants', **headers)
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'restaurants': {
+                'count': 1,
+                'items': [
+                    {
+                        'id': 1,
+                        'name': 'Тестовый ресторан',
+                        'city': 'Москва'
+                    }
+                ]
+            }
+        }
+        self.assertDictEqual(response.json(), expected)
+        
     
     def test_create_order(self):
         headers = {'HTTP_AUTHORIZATION': f'Bearer {self.access_token}',
