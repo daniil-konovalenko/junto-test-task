@@ -129,7 +129,8 @@ class Order(models.Model):
 class DishOrder(models.Model):
     """Due to  price changes we need to """
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
+    dish = models.ForeignKey(Dish, on_delete=models.CASCADE,
+                             verbose_name='блюдо')
     current_price = models.DecimalField(max_digits=8,
                                         decimal_places=2,
                                         verbose_name='стоимость на момент заказа, ₽')
