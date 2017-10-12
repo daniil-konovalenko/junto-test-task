@@ -69,6 +69,13 @@ class Restaurant(models.Model):
     class Meta:
         verbose_name = 'ресторан'
         verbose_name_plural = 'рестораны'
+        
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'city': self.city
+        }
     
     def __str__(self):
         return self.name
