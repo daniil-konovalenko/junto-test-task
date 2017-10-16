@@ -87,6 +87,10 @@ def get_token(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:
     user = authenticate(username=username, password=password)
     
     if user is not None:
+        for refresh_token in user.refresh_tokens.all():
+            refresh_token.revoked = True
+            refresh_token.save()
+
         tokens = generate_tokens(user)
         return JsonResponse(tokens)
     
